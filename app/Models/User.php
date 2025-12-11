@@ -5,12 +5,13 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens; // ✅ TRAIT YANG BENAR DARI SANCTUM
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,5 +46,29 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Relasi: User (Admin) bisa membuat banyak Item lelang
+     */
+    public function items()
+    {
+        return $this->hasMany(ItemLelang::class);
+    }
+
+    /**
+     * Relasi: User (Regular) bisa melakukan banyak Bid
+     */
+    public function bids()
+    {
+        return $this->hasMany(Bid::class);
+    }
+
+    /**
+     * Relasi: User bisa memenangkan banyak Item
+     */
+    public function wonItems()
+    {
+        return $this->hasMany(Item::class, 'winner_id');
     }
 }

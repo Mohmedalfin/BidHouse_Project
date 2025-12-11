@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // --- PAKSA TIMEZONE DISINI (JURUS PAMUNGKAS) ---
+        config(['app.timezone' => 'Asia/Jakarta']);
+        date_default_timezone_set('Asia/Jakarta');
+        // -----------------------------------------------
     }
 }
