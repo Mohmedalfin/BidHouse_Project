@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\ItemLelang;
 use App\Models\BidsLelang;
 use Illuminate\Support\Facades\DB;
-// Import Request dan Resource yang baru dibuat
 use App\Http\Requests\BidStoreRequest; 
 use App\Http\Resources\BidResource; 
 
@@ -19,11 +18,9 @@ class BidController extends Controller
         // User yang sedang login
         $user = $request->user();
 
-        // Data yang sudah lolos validasi 'amount' (integer, required)
         $validated = $request->validated(); 
 
         try {
-            // --- VALIDASI LOGIKA BISNIS (Tetap di Controller) ---
             
             // 1. Validasi Kepemilikan
             if ($item->user_id === $user->id) {
@@ -61,8 +58,7 @@ class BidController extends Controller
                 return $newBid;
             });
 
-            // --- RETURN RESOURCE ---
-            // Menggunakan BidResource agar format JSON rapi
+           
             return BidResource::make($bid)->additional([
                 'status' => 'success',
                 'message' => 'Penawaran berhasil masuk!'

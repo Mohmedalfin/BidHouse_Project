@@ -24,3 +24,10 @@ Route::middleware('auth:sanctum')->group(function(){
     // Bid
     Route::post('/items/{item}/bid', [BidController::class, 'store']);
 });
+
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'env'    => app()->environment(),
+    ]);
+});

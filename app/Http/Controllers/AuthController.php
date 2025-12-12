@@ -32,10 +32,8 @@ class AuthController extends Controller
             // Jika berhasil, ambil user yang sedang login
             $user = Auth::user();
 
-            // Buat token menggunakan Laravel Sanctum
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // Kirimkan respons sukses
             return response()->json([
                 'message' => 'Login Berhasil',
                 'data' => [
@@ -69,12 +67,10 @@ class AuthController extends Controller
             $user->password = Hash::make($data['password']);
             $user->save();
 
-            // Buat token
             $token = $user->createToken('auth_token')->plainTextToken;
 
             DB::commit();
 
-            // Kembalikan response sukses
             return response()->json([
                 'message' => 'Register berhasil bro',
                 'data' => [
@@ -84,7 +80,7 @@ class AuthController extends Controller
             ], 201);
 
         } catch (Exception $e) {
-            DB::rollBack(); // rollback penting kalau gagal!
+            DB::rollBack();
 
             return response()->json([
                 'message' => 'Terjadi Kesalahan',
@@ -133,7 +129,6 @@ class AuthController extends Controller
         try {
             $user = Auth::user();
 
-            // jaga-jaga kalau route lupa dikasih auth:sanctum
             if (!$user) {
                 return response()->json([
                     'message' => 'Unauthenticated',
@@ -141,17 +136,14 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            // update name kalau dikirim
             if (array_key_exists('name', $data)) {
                 $user->name = $data['name'];
             }
 
-            // update email kalau dikirim
             if (array_key_exists('email', $data)) {
                 $user->email = $data['email'];
             }
 
-            // update password kalau dikirim
             if (array_key_exists('password', $data)) {
                 $user->password = Hash::make($data['password']);
             }

@@ -1,0 +1,64 @@
+==================================================
+BIDHOUSE BACKEND API - PETUNJUK SETUP DAN PENGGUNAAN
+==================================================
+
+Proyek ini adalah Backend REST API untuk platform lelang BidHouse, dibangun menggunakan Laravel.
+
+I. PRASYARAT
+------------
+Pastikan Anda telah menginstal:
+1. PHP 8.1+
+2. Composer
+3. Database Server (PostgreSQL atau MySQL)
+4. Git
+
+II. SETUP LOKAL
+-----------------
+1. Kloning Repositori:
+   git clone https://github.com/ldclabs/anda
+   cd bidhouse-backend
+
+2. Instalasi Dependencies:
+   composer install
+
+3. Konfigurasi Lingkungan:
+   a. cp .env.example .env
+   b. php artisan key:generate
+   c. Buka file .env dan atur kredensial database lokal (DB_HOST, DB_USER, DB_PASSWORD, dll.)
+
+4. Migrasi Database:
+   php artisan migrate --seed 
+
+5. Menjalankan Server:
+   php artisan serve
+   # API dapat diakses di: http://127.0.0.1:8000
+
+III. PENGUJIAN ENDPOINT (DEVELOPER REFERENCE)
+---------------------------------------------
+BASE URL: http://127.0.0.1:8000/api
+
+A. Autentikasi
+- POST /register: Pendaftaran user.
+- POST /login: Login user, mengembalikan token (Wajib untuk permintaan selanjutnya).
+
+B. Manajemen Item (Hak Akses Admin)
+- POST /items: Membuat item lelang baru.
+- PUT/PATCH /items/{id}: Memperbarui detail item.
+- DELETE /items/{id}: Menghapus item.
+
+C. Lelang
+- GET /items: Melihat daftar item lelang yang sedang berlangsung.
+- POST /items/{id}/bid: Melakukan penawaran (Memerlukan token user, validasi: bid harus lebih tinggi dan lelang masih aktif).
+- POST /items/{id}/close: Menutup lelang dan menentukan pemenang (Hak Akses Admin/Sistem).
+
+==================================================
+IV. DOKUMENTASI API LENGKAP
+---------------------------
+Untuk detail parameter, body request, dan contoh response dari setiap endpoint, gunakan file Postman Collection / OpenAPI Specification.
+
+File: docs/bidhouse_api_spec.json 
+Anda dapat mengimpor file ini ke Postman atau Swagger UI.
+
+
+LINK POSTMANT :
+https://mohmedalfin170505-9451351.postman.co/workspace/Muhammad-Alfin-Maulana's-Worksp~0db634f0-399e-44a8-8df0-2c80cf620d9c/collection/47673375-aab6c1d4-488c-4bdc-90e8-8507e00c7b14?action=share&creator=47673375

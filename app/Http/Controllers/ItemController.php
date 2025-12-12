@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\ItemLelang;
 use App\Models\BindsLelang;
 use Illuminate\Http\Request;
-use App\Http\Requests\ItemStoreRequest; // Request Validasi
-use App\Http\Resources\ItemResource;    // Resource Format JSON
-use App\Http\Resources\ItemAllResource;    // Resource Format JSON
+use App\Http\Requests\ItemStoreRequest; 
+use App\Http\Resources\ItemResource;   
+use App\Http\Resources\ItemAllResource;   
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -16,14 +16,12 @@ class ItemController extends Controller
     public function store(ItemStoreRequest $request)
     {
         try {
-            // 1. Cek Authorization
             if ($request->user()->role !== 'admin') {
                 return response()->json([
                     'message' => 'Forbidden Access: Only Admin can create items'
                 ], 403);
             }
 
-            // 2. Ambil data validasi
             $validated = $request->validated();
 
             $baseSlug = Str::slug($validated['name']);
@@ -39,7 +37,6 @@ class ItemController extends Controller
             // Data $validated sekarang sudah berisi: name, desc, price, image, end_at, DAN SLUG.
             $item = $request->user()->items()->create($validated);
 
-            // 5. Return Sukses
             return ItemResource::make($item)->additional([
                 'message' => 'Barang lelang berhasil ditambahkan',
                 'status'  => 'success'
@@ -80,7 +77,6 @@ class ItemController extends Controller
             // 3. Eksekusi Query (Baru ambil datanya di sini)
             $items = $query->latest()->get();
 
-            // 4. Return menggunakan Resource
             return ItemAllResource::collection($items)->additional([
                 'status'  => 'success',
                 'message' => 'Daftar barang lelang berhasil diambil'
@@ -102,17 +98,12 @@ class ItemController extends Controller
     public function update(Request $request, ItemLelang $item)
     {
         try {
-            // 1. CEK OTORITAS ADMIN
-            // User biasa dilarang edit barang
             if ($request->user()->role !== 'admin') {
                 return response()->json([
                     'message' => 'Akses ditolak. Hanya Admin yang boleh mengubah data.'
                 ], 403);
             }
 
-            // 2. VALIDASI INPUT (Partial Update)
-            // Kita gunakan validasi manual di sini agar ringkas
-            // 'sometimes' artinya validasi jalan CUMA KALAU datanya dikirim
             $validated = $request->validate([
                 'name'          => 'sometimes|string|max:255',
                 'description'   => 'sometimes|string',
@@ -121,14 +112,8 @@ class ItemController extends Controller
                 'end_at'        => 'sometimes|date|after:now',
             ]);
 
-            // Catatan: Kita TIDAK mengupdate 'slug' agar URL tidak berubah (link tetap aman)
-            // Kita juga TIDAK mengupdate 'current_price' karena itu urusan sistem bidding
-
-            // 3. EKSEKUSI UPDATE
             $item->update($validated);
 
-            // 4. RETURN HASIL UPDATE
-            // Gunakan ItemResource (Detail) agar admin bisa lihat perubahannya
             return ItemResource::make($item)->additional([
                 'status'  => 'success',
                 'message' => 'Data barang berhasil diperbarui'
@@ -150,26 +135,21 @@ class ItemController extends Controller
     public function destroy(Request $request, ItemLelang $item)
     {
         try {
-            // 1. CEK OTORITAS ADMIN
             if ($request->user()->role !== 'admin') {
                 return response()->json([
                     'message' => 'Akses ditolak. Hanya Admin yang boleh menghapus barang.'
                 ], 403);
             }
 
-            // 2. CEK STATUS (Opsional)
-            // Mencegah admin menghapus barang yang sudah ada pemenangnya (biar data aman)
-            // Hapus blok if ini jika admin bebas menghapus kapan saja.
+
             if ($item->status === 'closed' && $item->winner_id !== null) {
                 return response()->json([
                     'message' => 'Barang yang sudah laku terjual tidak boleh dihapus demi arsip data.'
                 ], 400);
             }
 
-            // 3. EKSEKUSI HAPUS
             $item->delete(); 
-            // Otomatis bid terkait ikut terhapus jika di migrasi Anda set onDelete('cascade')
-            // Jika tidak, bid akan tetap ada tapi jadi yatim piatu (orphan).
+    
 
             return response()->json([
                 'status'  => 'success',
@@ -191,14 +171,12 @@ class ItemController extends Controller
      */
     public function close(Request $request, ItemLelang $item)
     {
-        // 1. Cek Authorization: Hanya Admin yang boleh
         if ($request->user()->role !== 'admin') {
             return response()->json([
                 'message' => 'Akses ditolak. Hanya Admin yang boleh menutup lelang.'
             ], 403);
         }
 
-        // 2. Cek Validasi: Jangan tutup lelang yang sudah tutup
         if ($item->status === 'closed') {
             return response()->json([
                 'message' => 'Lelang ini sudah ditutup sebelumnya.',
@@ -207,18 +185,14 @@ class ItemController extends Controller
         }
 
         // --- LOGIKA UTAMA: CARI PEMENANG ---
-        
         try {
             // Gunakan Transaction biar aman
             DB::transaction(function () use ($item) {
                 
-                // A. Cari bid tertinggi (Juara 1)
                 $highestBid = $item->bids()->orderBy('amount', 'desc')->first();
 
-                // B. Update status barang jadi 'closed'
                 $item->status = 'closed';
 
-                // C. Jika ada yang nawar, catat pemenangnya
                 if ($highestBid) {
                     $item->winner_id = $highestBid->user_id;
                     $item->current_price = $highestBid->amount; // Kunci harga akhir
@@ -227,9 +201,6 @@ class ItemController extends Controller
                 $item->save();
             });
 
-            // --- PERSIAPAN RESPONSE ---
-            
-            // Reload data biar relasi winner & user terbaca
             $item->load('winner');
 
             return response()->json([
