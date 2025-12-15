@@ -22,7 +22,3 @@ jobs:
           docker build \
             -f docker/php/Dockerfile \
             -t laravel-ci-test .
-
-      - name: Run container (test)
-        run: |
-          docker run --rm laravel-ci-test php -v
