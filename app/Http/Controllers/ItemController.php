@@ -105,25 +105,43 @@ class ItemController extends Controller
             }
 
             $validated = $request->validate([
-                'name'          => 'sometimes|string|max:255',
-                'description'   => 'sometimes|string',
-                'initial_price' => 'sometimes|integer',
-                'image'         => 'sometimes|string',
-                'end_at'        => 'sometimes|date|after:now',
+                'name'          => 'sometimes|required|string|max:255',
+                'description'   => 'sometimes|required|string',
+                'initial_price' => 'sometimes|required|integer|min:0',
+                'image'         => 'sometimes|required|string',
+                'end_at'        => 'sometimes|required|date|after:now',
             ]);
 
-            $item->update($validated);
+            // Kalau kosong, berarti request body tidak kebaca / field tidak terkirim
+            if (count($validated) === 0) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Tidak ada field yang dikirim untuk diupdate. Cek Body Postman (raw JSON) & header Content-Type.',
+                ], 422);
+            }
 
-            return ItemResource::make($item)->additional([
+            // bypass fillable (biar 100% ke-set kalau fieldnya benar)
+            $item->forceFill($validated);
+
+            /// regenerate slug kalau nama berubah
+            if (array_key_exists('name', $validated) && $validated['name'] !== $item->getOriginal('name')) {
+                $item->slug = Str::slug($validated['name']) . '-' . Str::lower(Str::random(6));
+            }
+
+            $item->save();
+
+            return ItemResource::make($item->refresh())->additional([
                 'status'  => 'success',
-                'message' => 'Data barang berhasil diperbarui'
+                'message' => 'Data barang berhasil diperbarui',
+                // ini bantu buktiin beneran berubah (boleh hapus setelah beres)
+                'changed' => $item->wasChanged(),
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Gagal mengupdate barang',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

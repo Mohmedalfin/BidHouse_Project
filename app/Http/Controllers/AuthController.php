@@ -28,7 +28,7 @@ class AuthController extends Controller
                     'data' => null
                 ], 401);
             }
-
+            
             // Jika berhasil, ambil user yang sedang login
             $user = Auth::user();
 
