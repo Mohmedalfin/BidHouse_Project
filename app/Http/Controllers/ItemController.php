@@ -137,11 +137,12 @@ class ItemController extends Controller
                 'changed' => $item->wasChanged(),
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Gagal mengupdate barang',
-                'error'   => $e->getMessage()
+                'status' => 'error',
+                'message' => 'Gagal mengupdate barang'
             ], 500);
         }
     }
@@ -226,7 +227,7 @@ class ItemController extends Controller
                 'message' => 'Lelang berhasil ditutup secara resmi.',
                 'data' => [
                     'item_name'   => $item->name,
-                    'is_sold'     => $item->winner_id ? true : false, // Laku atau tidak?
+                    'is_sold'     => $item->winner_id ? true : false,
                     'winner_name' => $item->winner ? $item->winner->name : 'Tidak ada penawar',
                     'final_price' => $item->current_price,
                     'closed_at'   => now()->format('Y-m-d H:i:s')

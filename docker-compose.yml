@@ -1,56 +1,28 @@
+version: "3.9"
+
 services:
   app:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-    container_name: laravel_app
-    volumes:
-      - ./:/var/www/html
+    build: .
+    container_name: bidhouse-app
     ports:
-      - "8003:80"
-    environment:
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_DATABASE: laravel_db
-      DB_USERNAME: laravel
-      DB_PASSWORD: secret
-      DB_PORT: 3306
+      - "8000:8000"
+    env_file:
+      - .env.docker
     depends_on:
-      - mysql
-      - phpmyadmin
-    networks:
-      - laravel
+      - db
 
-  mysql:
-    image: mysql:8
-    container_name: laravel_mysql
+  db:
+    image: mysql:8.0
+    container_name: bidhouse-db
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: laravel_db
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: bidhouse
+      MYSQL_USER: bidhouse_user
+      MYSQL_PASSWORD: bidhouse_pass
     ports:
-      - "3307:3306"
+      - "3307:3306" # optional, kalau mau akses dari host
     volumes:
-      - ./mysql_data:/var/lib/mysql
-    networks:
-      - laravel
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: laravel_phpmyadmin
-    restart: always
-    ports:
-      - "8001:80"
-    environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: root
-    depends_on:
-      - mysql
-    networks:
-      - laravel
-networks:
-  laravel:
+      - db_data:/var/lib/mysql
 
 volumes:
-  mysql-data:
+  db_data:
